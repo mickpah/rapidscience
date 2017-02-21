@@ -63,11 +63,10 @@ $('.cancel-button-collapse').on('click', function(event) {
     $(this).closest('.collapse').collapse('hide');
 });
 
-// Utility to dynamically fetch forms shown in modals so we don't bloat the HTML with hundreds of pre-rendered forms
-$('.modal').on('shown.bs.modal', function (event) {
-    // Get the action from the form, this is where we'll fetch the form from
+function bindModal(event) {
+  // Get the action from the form, this is where we'll fetch the form from
     var form = $(this).find('form');
-    var form_url = $(form).attr('action')  + "?preventCache=" + $.now();
+    var form_url = $(form).attr('action');
     selectedBookmarksFolderName = ''; // may be set on prev.actions, so clear it
     $.get(form_url, function(data) {
         // Replace .modal-body with the results
@@ -112,7 +111,10 @@ $('.modal').on('shown.bs.modal', function (event) {
             }
         });
     });
-});
+}
+
+// Utility to dynamically fetch forms shown in modals so we don't bloat the HTML with hundreds of pre-rendered forms
+$('.modal').on('shown.bs.modal', bindModal);
 
 // Get active modal window
 function getActiveModal() {
@@ -163,20 +165,25 @@ function setMessageForActiveModal(message) {
 $('.container').on('submit', 'form.bookmark', function(event) {
     event.preventDefault();
     var form = $(this);
-    var actions = form.parents('.activity-actions');
+    var container = form.parents('.bookmark-widget-container');
     $.post(form.attr('action'), form.serialize(), function(data) {
-        if (data.messages) {
-            // Clear out any old messages
-            $('.alert').remove();
-            form.parents('.activity-stream').prepend(data.messages);
+        function replaceForm() {
+            if (data.messages) {
+                // Clear out any old messages
+                $('.alert').remove();
+                container.closest('.activity-stream').prepend(data.messages);
+            }
+            if (data.form) {
+                container.html(data.form);
+                $('.modal').on('shown.bs.modal', bindModal);
+            }
         }
-        if (data.form) {
-            form.replaceWith(data.form);
+        var activeModal = getActiveModal();
+        if (activeModal.length) {
+            activeModal.modal('hide').on('hidden.bs.modal', replaceForm);
+        } else {
+            replaceForm();
         }
-        // hide active modal
-        getActiveModal().modal('hide');
-        // New bookmark successfully added, block action link to prevent showing modal again
-        actions.find('.bookmark-widget button').attr('title','Item already bookmarked').attr('disabled','');
     });
 });
 
@@ -261,7 +268,7 @@ $('.action-remove').click(function(event) {
             // New folder successfully added, reload page to display it
             location.reload();
         } else {
-            setMessageForActiveModal('<div class="alert alert-warning">Some error occured, can\'t delete this bookmark</div>');
+            setMessageForActiveModal('<div class="alert alert-warning">Some error occurred, can\'t delete this bookmark</div>');
         }
     });
 });

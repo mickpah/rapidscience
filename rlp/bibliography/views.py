@@ -282,7 +282,7 @@ def reference_edit(request, pk, slug, reference_pk, template_name='bibliography/
     return render(request, template_name, context)
 
 
-
+@never_cache
 @login_required
 def reference_share(request, reference_pk):
     project_reference = get_object_or_404(ProjectReference, pk=reference_pk)

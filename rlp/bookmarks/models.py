@@ -18,7 +18,7 @@ class Folder(models.Model):
 
 
 class Bookmark(models.Model):
-    name = models.CharField(max_length=50, blank=True)
+    name = models.CharField(max_length=500, blank=True)
     folder = models.ForeignKey(Folder, null=True, blank=True, on_delete=models.PROTECT)
     content_type = models.ForeignKey(ContentType,
                                      verbose_name='content type',
@@ -35,7 +35,7 @@ class Bookmark(models.Model):
     def __str__(self):
         if self.name:
             return self.name
-        if self.content_type.model == 'projectreference':
+        if self.content_type.model in ['projectreference', 'referenceshare']:
             name = str(self.content_object.reference)
         else:
             name = str(self.content_object)

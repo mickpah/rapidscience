@@ -1,14 +1,20 @@
-{% load cms_tags static %}
-{% load bookmarks %}
+{% load bookmarks cms_tags static %}
 {% has_bookmark_permission action as can_bookmark %}
+{% get_existing_bookmark action as existing_bookmark %}
 
 <div class="bookmark-widget">
   {% if can_bookmark %}
-    <form class="bookmark-button" method="post">{% csrf_token %}
+    {% if existing_bookmark %}
+      <form class="bookmark" action="{% url 'bookmark_delete' existing_bookmark.pk %}" method="post">{% csrf_token %}
+        <button class="existing-bookmark" type="submit">
+          <i class="fa fa-bookmark" aria-hidden="true"></i>
+        </button>
+      </form>
+    {% else %}
       <button type="button" data-toggle="modal" data-target="#modal-bookmark-{{ action.id }}" title="Bookmark this item">
         <i class="fa fa-bookmark" aria-hidden="true"></i>
       </button>
-    </form>
+    {% endif %}
   {% else %}
     <button disabled title="Item already bookmarked">
       <i class="fa fa-bookmark" aria-hidden="true"></i>

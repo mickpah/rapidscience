@@ -425,7 +425,7 @@ def get_or_create_reference(query):
         Entrez.email = settings.PUBMED_EMAIL
         results = Entrez.read(
             Entrez.efetch(db='pubmed', retmode='xml', id=query)
-        )
+        ).get('PubmedArticle', [])
         references = []
         for result in results:
             reference, created = get_or_create_reference_from_pubmed(result)

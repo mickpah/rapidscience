@@ -41,7 +41,9 @@
           {% if obj.owner == request.user %}{% include 'forms/_edit_dropdown.html' with edit_url=obj.get_edit_url delete_url=obj.get_delete_url %}{% endif %}
         {% endif %}
         {% if request.user.is_authenticated %}
-          {% include 'bookmarks/_add_bookmark.html' %}
+          <div class="bookmark-widget-container">
+            {% include 'bookmarks/_add_bookmark.html' %}
+          </div>
         {% endif %}
         {% if model == 'projectreference' and request.user.is_authenticated %}
           {% include 'bibliography/_share_reference.html' %}

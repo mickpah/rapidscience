@@ -2,7 +2,7 @@
 
 {% block project_discussion %}
 {% if comment.title %}<h4>{{ comment.title }}</h4>{% endif %}
-<p>{{ comment.comment|urlize|linebreaksbr }}</p>
+<p class="more">{{ comment.comment|urlize|linebreaksbr }}</p>
 <p class="small">
   <a href="{{ comment.user.get_absolute_url }}">
     {{ comment.user.get_full_name }}{% if comment.user.institution %}, {{ comment.user.institution }}{% endif %}
