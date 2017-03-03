@@ -7,6 +7,8 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import ugettext_lazy as _
 
+from nocaptcha_recaptcha.fields import NoReCaptchaField
+
 from .models import User, Institution
 from rlp.core.email import send_transactional_mail
 from rlp.projects.models import Project, Role, ProjectMembership
@@ -110,6 +112,7 @@ class RegistrationForm(UserCreationForm):
     project = forms.ModelChoiceField(queryset=Project.objects.all())
     role = forms.ModelChoiceField(help_text="Leave blank if not applicable",
                                   queryset=Role.objects.exclude(contact=True), required=False)
+    captcha = NoReCaptchaField()
 
     class Meta:
         model = User
