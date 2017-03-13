@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.conf import settings
 # Avoid shadowing the login() and logout() views below.
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout, authenticate)
@@ -23,6 +25,7 @@ from django.views.generic.base import TemplateView
 from actstream.models import Action
 from el_pagination.decorators import page_template
 from formtools.wizard.views import SessionWizardView
+from nocaptcha_recaptcha.fields import NoReCaptchaField
 
 from rlp.bibliography.models import fetch_publications_for_user
 from rlp.core.email import send_transactional_mail
@@ -172,6 +175,37 @@ class Register(SessionWizardView):
         form = form or self.get_form()
         context = self.get_context_data(form=form, **kwargs)
         return self.render_to_response(context)
+
+    def render_done(self, form, **kwargs):
+        """
+        This method gets called when all forms passed. The method should also
+        re-validate all steps to prevent manipulation. If any form fails to
+        validate, `render_revalidation_failure` should get called.
+        If everything is fine call `done`.
+        We are overriding this to remove the captcha field from the form
+        step so it doesn't get submitted twice for validation.
+        """
+        final_forms = OrderedDict()
+        # walk through the form list and try to validate the data again.
+        for form_key in self.get_form_list():
+            form_obj = self.get_form(
+                step=form_key,
+                data=self.storage.get_step_data(form_key),
+                files=self.storage.get_step_files(form_key)
+            )
+            # Remove captcha field from form because it has already been validated and will fail if submitted twice
+            for field, obj in form_obj.fields.items():
+                if isinstance(obj, NoReCaptchaField):
+                    del form_obj.fields[field]
+            if not form_obj.is_valid():
+                return self.render_revalidation_failure(form_key, form_obj, **kwargs)
+            final_forms[form_key] = form_obj
+        # render the done view and reset the wizard before returning the
+        # response. This is needed to prevent from rendering done with the
+        # same data twice.
+        done_response = self.done(final_forms.values(), form_dict=final_forms, **kwargs)
+        self.storage.reset()
+        return done_response
 
     def get_activation_key(self, user):
         """
